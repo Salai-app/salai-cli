@@ -8,9 +8,7 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-> **Looking for MCP integration?** See [`@idoz.dev/salai-mcp`](../mcp-cli) for Cursor / Claude Desktop.
-
-## What's New in v0.1.1
+## What's New in v0.1.3
 
 - Improved npm metadata and discoverability
 - Added vendor-neutral and tool-specific AI agent integration docs
