@@ -10,6 +10,20 @@ npx salai cart add 7290019489443
 
 > **Looking for MCP integration?** See [`@salai/mcp`](../mcp-cli) for Cursor / Claude Desktop.
 
+## Agent Integration
+
+AI agents should run Salai commands in JSON mode:
+
+```bash
+salai search "חלב" --json
+```
+
+See:
+
+- `AGENTS.md`
+- `docs/agent-spec-short.md`
+- `docs/agents/`
+
 ## Install
 
 ```bash
