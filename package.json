@@ -1,12 +1,15 @@
 {
   "name": "salai",
-  "version": "0.1.0",
-  "description": "Salai grocery intelligence CLI — search products, compare prices, manage your cart from the terminal",
-  "keywords": ["salai", "grocery", "price-comparison", "cli", "israel"],
+  "version": "0.1.1",
+  "description": "Salai grocery CLI for Israeli product search, price comparison, and cart workflows",
+  "keywords": ["salai", "grocery", "price-comparison", "cli", "israel", "shopping", "hebrew", "agents", "mcp"],
   "homepage": "https://salai.co.il",
   "repository": {
     "type": "git",
     "url": "https://github.com/Salai-app/salai-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Salai-app/salai-cli/issues"
   },
   "license": "MIT",
   "type": "module",

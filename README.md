@@ -10,6 +10,12 @@ npx salai cart add 7290019489443
 
 > **Looking for MCP integration?** See [`@salai/mcp`](../mcp-cli) for Cursor / Claude Desktop.
 
+## What's New in v0.1.1
+
+- Improved npm metadata and discoverability
+- Added vendor-neutral and tool-specific AI agent integration docs
+- Documented JSON-first usage for automation workflows
+
 ## Agent Integration
 
 AI agents should run Salai commands in JSON mode:
