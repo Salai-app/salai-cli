@@ -1,0 +1,42 @@
+{
+  "name": "salai",
+  "version": "0.1.0",
+  "description": "Salai grocery intelligence CLI — search products, compare prices, manage your cart from the terminal",
+  "keywords": ["salai", "grocery", "price-comparison", "cli", "israel"],
+  "homepage": "https://salai.co.il",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Salai-app/salai-cli"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "salai": "dist/salai.js"
+  },
+  "main": "./dist/salai.js",
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/salai.ts",
+    "test": "tsc && node --test dist/salai.test.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "tsx": "^4.4.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
