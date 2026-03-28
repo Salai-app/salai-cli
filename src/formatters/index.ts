@@ -138,6 +138,9 @@ export function outputResult(result: ToolResult, toolName: string): void {
     case 'get_complementary_recommendations':
       formatRecommendations(data);
       break;
+    case 'fulfill_shopping_list':
+      formatFulfillShoppingList(data);
+      break;
     default:
       console.log(JSON.stringify(data, null, 2));
   }
@@ -441,4 +444,79 @@ function formatRecommendations(data: any): void {
     shekel(r.price ?? r.itemPrice),
   ]);
   console.log(table(['Code', 'Name', 'Price'], rows, ['l', 'l', 'r']));
+}
+
+function formatFulfillShoppingList(data: any): void {
+  // Error / blocked states
+  if (data.status === 'error' || data.status === 'blocked') {
+    console.log(c(RED, `${data.errorCode ?? 'Error'}: ${data.message ?? ''}`));
+    return;
+  }
+
+  // Ranked stores table
+  const ranked = data.rankedStores ?? [];
+  if (ranked.length === 0) {
+    console.log(c(DIM, 'No stores returned.'));
+    return;
+  }
+
+  console.log(c(BOLD, '\n📊 Store Ranking\n'));
+  const storeRows = ranked.map((s: any) => {
+    const cov = s.coverage ?? {};
+    const missing = cov.missing ?? 0;
+    const alt = cov.alternative ?? 0;
+    const badge = s.isCheapest ? c(GREEN, ' ★ Best') : '';
+    const promoNote =
+      s.promotions?.count > 0
+        ? c(CYAN, ` (${s.promotions.count} promo${s.promotions.count > 1 ? 's' : ''})`)
+        : '';
+    return [
+      `#${s.rank}`,
+      rtl(s.storeLabel ?? ''),
+      s.displaySubtotal ?? shekel(s.subtotal),
+      String(missing),
+      String(alt),
+      badge + promoNote,
+    ];
+  });
+  console.log(table(['#', 'Store', 'Total', 'Miss', 'Alt', ''], storeRows, ['r', 'l', 'r', 'r', 'r', 'l']));
+
+  // Cheapest summary
+  const cheapest = data.cheapest;
+  if (cheapest) {
+    console.log(
+      `\n${c(GREEN, '★')} Cheapest complete basket: ${c(BOLD, rtl(cheapest.storeLabel))} ` +
+        `${c(GREEN, shekel(cheapest.subtotal))}` +
+        (cheapest.savings > 0
+          ? ` ${c(DIM, '(saves')} ${c(GREEN, shekel(cheapest.savings))} ${c(DIM, `/ ${cheapest.savingsPercent.toFixed(1)}%)`)}`
+          : ''),
+    );
+  }
+
+  // Warnings
+  const warnings = data.warnings ?? [];
+  if (warnings.length > 0) {
+    console.log(c(YELLOW, `\n⚠ ${warnings.length} warning(s):`));
+    for (const w of warnings) {
+      console.log(`  ${c(YELLOW, '•')} ${rtl(w.query)}: ${w.message}`);
+    }
+  }
+
+  // Split opportunity
+  const split = data.splitOpportunity;
+  if (split) {
+    console.log(
+      `\n${c(CYAN, '✂ Split opportunity:')} save ~${c(GREEN, shekel(split.netSavings))} net ` +
+        `(extra delivery ${split.extraDeliveryCost})`,
+    );
+    for (const si of split.splitItems.slice(0, 5)) {
+      console.log(`  ${c(DIM, '→')} ${rtl(si.query)} cheaper at ${rtl(si.betterAt)} (${c(GREEN, shekel(si.savingsOnItem))})`);
+    }
+  }
+
+  // Timing
+  const timing = data.timing;
+  if (timing) {
+    console.log(c(DIM, `\nTiming: resolve ${timing.resolveMs}ms, prices ${timing.priceMs}ms, total ${timing.totalMs}ms`));
+  }
 }

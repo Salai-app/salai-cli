@@ -1,6 +1,6 @@
 {
   "name": "salai",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Salai grocery CLI for Israeli product search, price comparison, and cart workflows",
   "keywords": [
     "salai",
@@ -41,8 +41,9 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
-    "commander": "^13.0.0"
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "commander": "^13.0.0",
+    "hono": "^4.12.9"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",

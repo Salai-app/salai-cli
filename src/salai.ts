@@ -21,6 +21,7 @@ import { registerStoreCommands } from './commands/stores.js';
 import { registerCartCommands } from './commands/cart.js';
 import { registerRecommendCommands } from './commands/recommend.js';
 import { registerCallCommands } from './commands/call.js';
+import { registerFulfillCommands } from './commands/fulfill.js';
 
 const program = new Command()
   .name('salai')
@@ -67,6 +68,16 @@ registerStoreCommands(program, getClient, isJson);
 registerCartCommands(program, getClient, isJson);
 registerRecommendCommands(program, getClient, isJson);
 registerCallCommands(program, getClient, isJson);
+registerFulfillCommands(program, getClient, isJson);
+
+program.addHelpText(
+  'after',
+  `
+AI agents: use --json on every command. Run salai <command> --help for that command's flags
+(e.g. salai fulfill --help). Full MCP args: salai call <toolName> --args '{"…"}' --json
+or salai tools --json to list tools from the server.
+`,
+);
 
 program.exitOverride();
 

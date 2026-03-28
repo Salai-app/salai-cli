@@ -8,11 +8,10 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-## What's New in v0.1.3
+## What's New in v0.1.4
 
-- Improved npm metadata and discoverability
-- Added vendor-neutral and tool-specific AI agent integration docs
-- Documented JSON-first usage for automation workflows
+- `salai fulfill` — one-call shopping list quotes (MCP `fulfill_shopping_list`)
+- Richer `--help` (including `salai fulfill --help`) and README guidance for AI agents
 
 ## Agent Integration
 
@@ -27,6 +26,32 @@ See:
 - `AGENTS.md`
 - `docs/agent-spec-short.md`
 - `docs/agents/`
+
+## Using with AI agents
+
+Same idea as [dev-browser’s agent workflow](https://github.com/SawyerHood/dev-browser?tab=readme-ov-file#using-with-ai-agents): **have the agent read `--help`** so it sees every flag and the extra notes we embed for automation.
+
+1. **`salai --help`** — command list plus a short reminder to use `--json` and subcommand help.
+2. **`salai <command> --help`** — all options for that command. Shopping lists: **`salai fulfill --help`** (includes CLI vs full MCP tool, examples, billing errors).
+3. **`salai tools --json`** — tool names and schemas as returned by the live server.
+
+For MCP fields that are not CLI flags (structured `items`, `scope.stores` with `mode: explicit`, `resolution.policy`, `alternatives.maxPerItem`, `llmRawListExtraction`, `includeDiagnostics`, etc.), use:
+
+```bash
+salai call fulfill_shopping_list --args '{"rawList":"חלב, לחם","scope":{"mode":"online_only","maxStores":5}}' --json
+```
+
+### Claude Code (optional)
+
+To reduce permission prompts, pre-approve the CLI in `.claude/settings.json` (project) or `~/.claude/settings.json` (global):
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(salai *)", "Bash(npx salai *)"]
+  }
+}
+```
 
 ## Install
 
@@ -75,6 +100,22 @@ salai autocomplete <query>        # Fast autocomplete lookup
 salai ac <query>                  # Alias
   --limit <n>                     # Max results (default 15)
   --method <text|semantic>        # Search method (default text)
+```
+
+### Fulfill (shopping list quote)
+
+Resolves a list, compares baskets across stores, returns ranked stores (MCP `fulfill_shopping_list`). **Does not require a selected store.** Prefer **`salai fulfill --help`** for the full agent-oriented help text.
+
+```bash
+salai fulfill [items...]          # Inline list (comma-separated) or use --file
+  --scope <mode>                  # online_only (default) | all_active
+  --max-stores <n>                # Cap stores compared (default 10)
+  --file <path>                   # Newline-separated list file
+  --brand-strict                  # alternatives.policy = same_brand
+  --no-alternatives               # alternatives.enabled = false
+
+# Explicit store lists and other MCP-only fields:
+salai call fulfill_shopping_list --args '{"items":[...],"scope":{"mode":"explicit","stores":[...]}}' --json
 ```
 
 ### Pricing

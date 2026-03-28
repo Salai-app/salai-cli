@@ -1,24 +1,53 @@
 ---
 name: salai-cli
-description: Israeli grocery shopping via the Salai CLI. Use when the user asks to use the salai CLI, salai command line, or when you need shell-based product search, price comparison, cart management, and store discovery. Prefer the salai-mcp skill when MCP tools are available; use this skill when only shell access is available.
+description: Israeli grocery shopping via the Salai CLI. Use when the user asks for the salai CLI, salai command line, or shell-based search, price comparison, cart management, store discovery, or one-shot shopping-list quotes (`salai fulfill`). Prefer the salai-mcp skill when MCP tools are available; use this skill when only shell access is available.
 homepage: https://app.salai.co.il
 ---
 
 # Salai CLI Skill (Shell / Terminal)
 
-Use the `salai` CLI to search Israeli grocery products, compare prices, and manage shopping carts from the terminal. All commands talk to `https://mcp.salai.co.il/mcp`.
+Use the `salai` CLI to search Israeli grocery products, compare prices, manage carts, and (recommended) quote whole shopping lists in one call. All commands talk to `https://mcp.salai.co.il/mcp`.
+
+Longer agent guidance: `docs/agent-spec-short.md` in this repository; full `docs/agent-spec.md` may live in the [SalAi monorepo](https://github.com/IdoZiv/SalAi).
 
 ## Prerequisites
 
-- `salai` CLI must be installed: `npm i -g salai`
-- `SALAI_API_KEY` environment variable must be set (or pass `--api-key`)
-- A store must be selected before search/cart commands work
+- `salai` CLI installed: `npm i -g salai` or `npx salai <command>`
+- `SALAI_API_KEY` set (or pass `--api-key`)
+- **Selected store** is required for `search`, `autocomplete`, `cart`, and for `compare` / `prices` scope — **not** for `fulfill` (quote mode is request-scoped; no `SELECTED_STORE_REQUIRED`)
 
 ## CRITICAL: Always use `--json`
 
-When calling `salai` as an agent, **always append `--json`** to every command. This outputs machine-readable JSON instead of formatted tables. Parse the JSON output to extract data.
+When calling `salai` as an agent, **always append `--json`** to every command. Parse structured JSON from the output.
 
 ## Commands Reference
+
+### Fulfill (recommended — no selected store)
+
+Resolves a shopping list, compares baskets across stores, returns ranked stores, per-item match types, promotions, and alternatives. Uses MCP tool `fulfill_shopping_list` (quote mode). Higher token cost and stricter rate limits than search; handle `TOKEN_LIMIT_REACHED` and `RATE_LIMIT_EXCEEDED`.
+
+```bash
+# Inline list (comma-separated); Hebrew quantities supported in the text
+salai fulfill "חלב, לחם, ביצים" --json
+
+salai fulfill "פעמיים חלב, לחם" --json
+
+# List file (newline-separated lines)
+salai fulfill --file ./list.txt --json
+
+# Store universe: online_only (default) or all_active (explicit store IDs: salai call, not this subcommand)
+salai fulfill "חלב" --scope all_active --max-stores 5 --json
+
+# Alternatives: same-brand substitutions only; or disable alternatives
+salai fulfill "חלב" --brand-strict --json
+salai fulfill "חלב" --no-alternatives --json
+```
+
+For **`scope.mode: explicit`** with a specific `stores[]` list, use the escape hatch — the `fulfill` subcommand does not pass explicit store pairs:
+
+```bash
+salai call fulfill_shopping_list --args '{"rawList":"חלב","scope":{"mode":"explicit","stores":[{"retailerId":"...","storeId":"..."}]}}' --json
+```
 
 ### Stores (no store selection required)
 
@@ -39,6 +68,7 @@ salai ac "<query>" --method semantic --json   # Semantic autocomplete fallback
 ```
 
 **Search JSON output shape** (structuredContent):
+
 ```json
 {
   "viewType": "numbered_products",
@@ -49,7 +79,7 @@ salai ac "<query>" --method semantic --json   # Semantic autocomplete fallback
 }
 ```
 
-Extract `itemCode` from results to use with cart and price commands.
+Extract `itemCode` from results for cart and price commands.
 
 ### Pricing (requires selected store for scope)
 
@@ -72,7 +102,7 @@ salai cart compare --json                      # Compare cart across stores
 salai cart delete <cartId> --json              # Delete a cart
 ```
 
-The `cart add` command auto-resolves the cart ID - no need to pass `--cart-id`.
+The `cart add` command auto-resolves the cart ID — no `--cart-id`.
 
 ### Recommendations
 
@@ -90,33 +120,42 @@ salai call <toolName> --args '{"key":"value"}' --json # Call any tool by name
 
 ## Workflow
 
-### Standard cart workflow
+### Shopping list in one call (preferred when quoting)
 
-1. **Check store**: `salai store --json` - if no store is set, proceed to step 2
-2. **Set store**: `salai stores --json` -> pick a store -> `salai store set <retailerId> <storeId>`
-3. **Search**: `salai search "חלב" --json` -> extract `itemCode` from `numberedProducts[].itemCode`
+1. `salai fulfill "<items>" --json` or `salai fulfill --file path --json`
+2. Parse ranked stores, line items, `tokenUsage` if present; respect rate limits before retrying
+
+### Legacy granular cart workflow
+
+1. **Check store**: `salai store --json` — if none, continue
+2. **Set store**: `salai stores --json` → pick → `salai store set <retailerId> <storeId>`
+3. **Search**: `salai search "חלב" --json` → `numberedProducts[].itemCode`
 4. **Add to cart**: `salai cart add <itemCode> --json`
-5. **Compare**: `salai cart compare --json` - find the cheapest store
+5. **Compare**: `salai cart compare --json`
 
-### Price comparison (no cart needed)
+### Price comparison without cart
 
-1. `salai search "חלב" --json` -> get `itemCode`
-2. `salai compare <itemCode>:1 --json` -> see prices across retailers
+1. `salai search "חלב" --json` → `itemCode`
+2. `salai compare <itemCode>:1 --json`
 
-## Store-first behavior
+## Store and scope behavior
 
 | Commands | Behavior |
 |---|---|
+| `fulfill` | No selected store; scope from flags / tool args (`online_only`, `all_active`, or explicit via `salai call`) |
 | `store`, `stores`, `retailers` | Work without a selected store |
 | `search`, `autocomplete`, `cart *` | Require a selected store |
 | `compare`, `prices` | Cross-store comparison (needs selected store for scope) |
 | `recommend`, `tools` | Work without a selected store |
 
-If no store is set, store-scoped commands return `status: "blocked"`, `errorCode: "SELECTED_STORE_REQUIRED"`. When you see this, call `salai store set` first.
+If no store is set, store-scoped commands return `status: "blocked"`, `errorCode: "SELECTED_STORE_REQUIRED"`. Use `salai store set` first — **unless** you are using `fulfill`, which does not use the selected-store context for quote mode.
 
 ## Error handling
 
-- **No output / connection error** - check `SALAI_API_KEY` is set and valid
-- **`SELECTED_STORE_REQUIRED`** - run `salai store set <retailerId> <storeId>` first
-- **Empty search results** - try `salai ac "<query>" --method semantic --json` as fallback
-- **Never log or expose the API key in output**
+- **No output / connection error** — check `SALAI_API_KEY` and network
+- **`SELECTED_STORE_REQUIRED`** — `salai store set <retailerId> <storeId>` (not applicable to `fulfill`)
+- **`TOKEN_LIMIT_REACHED`** / **`RATE_LIMIT_EXCEEDED`** — especially on `fulfill`; back off, reduce frequency, or upgrade plan; read response `retryAfterMs` if present
+- **`AUTH_REQUIRED`** — missing or invalid API key
+- **`INVALID_INPUT`** — empty list, bad scope, etc.
+- **Empty search results** — try `salai ac "<query>" --method semantic --json`
+- **Never log or expose the API key**
