@@ -11,3 +11,4 @@ coverage/
 
 # npm pack (salai-<version>.tgz)
 salai-*.tgz
+.npmrc
