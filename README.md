@@ -8,10 +8,10 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-## What's New in v0.1.4
+## What's New in v0.1.5
 
-- `salai fulfill` — one-call shopping list quotes (MCP `fulfill_shopping_list`)
-- Richer `--help` (including `salai fulfill --help`) and README guidance for AI agents
+- `salai shopping-list` — alias for `salai fulfill`; same MCP tool `fulfill_shopping_list` (shopping list quote)
+- README aligned with the SalAi monorepo package; agent integration section cleanup
 
 ## Agent Integration
 
@@ -29,10 +29,10 @@ See:
 
 ## Using with AI agents
 
-Same idea as [dev-browser’s agent workflow](https://github.com/SawyerHood/dev-browser?tab=readme-ov-file#using-with-ai-agents): **have the agent read `--help`** so it sees every flag and the extra notes we embed for automation.
+**Have the agent read `--help`** so it sees every flag and the extra notes we embed for automation.
 
 1. **`salai --help`** — command list plus a short reminder to use `--json` and subcommand help.
-2. **`salai <command> --help`** — all options for that command. Shopping lists: **`salai fulfill --help`** (includes CLI vs full MCP tool, examples, billing errors).
+2. **`salai <command> --help`** — all options for that command. Shopping lists: **`salai shopping-list --help`** (includes CLI vs full MCP tool, examples, billing errors).
 3. **`salai tools --json`** — tool names and schemas as returned by the live server.
 
 For MCP fields that are not CLI flags (structured `items`, `scope.stores` with `mode: explicit`, `resolution.policy`, `alternatives.maxPerItem`, `llmRawListExtraction`, `includeDiagnostics`, etc.), use:
@@ -54,6 +54,30 @@ To reduce permission prompts, pre-approve the CLI in `.claude/settings.json` (pr
 ```
 
 ## Install
+
+### Option 1: Agent skill (recommended)
+
+Skill source: [github.com/Salai-app/salai-cli](https://github.com/Salai-app/salai-cli) (`skills/salai-cli`).
+
+```bash
+npx skills add Salai-app/salai-cli
+```
+
+Uses [`npx skills`](https://github.com/vercel-labs/skills) (Vercel Labs). It detects your installed coding agents (OpenCode, Claude Code, Codex, Cursor, and [40+ more](https://github.com/vercel-labs/skills#supported-agents)) and installs the skill to the right location.
+
+Install globally (available across all projects):
+
+```bash
+npx skills add Salai-app/salai-cli -g
+```
+
+Target a specific agent:
+
+```bash
+npx skills add Salai-app/salai-cli -a claude-code -g
+```
+
+### Option 2: CLI only
 
 ```bash
 # Use directly with npx (no install needed)
@@ -102,12 +126,12 @@ salai ac <query>                  # Alias
   --method <text|semantic>        # Search method (default text)
 ```
 
-### Fulfill (shopping list quote)
+### Shopping list (shopping-list / fulfill)
 
-Resolves a list, compares baskets across stores, returns ranked stores (MCP `fulfill_shopping_list`). **Does not require a selected store.** Prefer **`salai fulfill --help`** for the full agent-oriented help text.
+Resolves a list, compares baskets across stores, returns ranked stores (MCP `fulfill_shopping_list`). **Does not require a selected store.** Prefer **`salai shopping-list --help`** for the full agent-oriented help text.
 
 ```bash
-salai fulfill [items...]          # Inline list (comma-separated) or use --file
+salai shopping-list [items...]    # Inline list (comma-separated) or use --file (alias: salai fulfill)
   --scope <mode>                  # online_only (default) | all_active
   --max-stores <n>                # Cap stores compared (default 10)
   --file <path>                   # Newline-separated list file
@@ -117,6 +141,8 @@ salai fulfill [items...]          # Inline list (comma-separated) or use --file
 # Explicit store lists and other MCP-only fields:
 salai call fulfill_shopping_list --args '{"items":[...],"scope":{"mode":"explicit","stores":[...]}}' --json
 ```
+
+Same command as `salai fulfill …` (legacy name).
 
 ### Pricing
 

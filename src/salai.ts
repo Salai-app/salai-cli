@@ -74,7 +74,7 @@ program.addHelpText(
   'after',
   `
 AI agents: use --json on every command. Run salai <command> --help for that command's flags
-(e.g. salai fulfill --help). Full MCP args: salai call <toolName> --args '{"…"}' --json
+(e.g. salai shopping-list --help or salai fulfill --help). Full MCP args: salai call <toolName> --args '{"…"}' --json
 or salai tools --json to list tools from the server.
 `,
 );

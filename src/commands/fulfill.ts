@@ -11,8 +11,9 @@ export function registerFulfillCommands(
 ) {
   program
     .command('fulfill [items...]')
+    .alias('shopping-list')
     .description(
-      'Find the best store for a shopping list. ' +
+      'Shopping list quote: find the best store for a list. ' +
         'Pass items inline (comma/space separated) or via --file.',
     )
     .addOption(
@@ -67,15 +68,17 @@ export function registerFulfillCommands(
     .addHelpText(
       'after',
       `
-Global options (same as root salai --help; often placed after the subcommand, e.g. salai fulfill "…" --json)
+Global options (same as root salai --help; often placed after the subcommand, e.g. salai shopping-list "…" --json)
   -k, --api-key <key>   Salai API key (or SALAI_API_KEY env)
   --url <url>           MCP endpoint URL (or SALAI_MCP_URL env)
   --json                Raw JSON output instead of formatted tables
 
+  Command names: salai shopping-list and salai fulfill are the same (zero breaking; fulfill is the canonical name in help).
+
 Agent / automation
   Use --json on every invoke so output matches MCP structured payloads.
 
-  fulfill does not use the selected store (quote mode is fully request-scoped).
+  This command does not use the selected store (quote mode is fully request-scoped).
   Higher token cost than search; errors may include TOKEN_LIMIT_REACHED or RATE_LIMIT_EXCEEDED.
 
 CLI vs full MCP tool
@@ -87,9 +90,10 @@ CLI vs full MCP tool
     llmRawListExtraction (default true on server for rawList), includeDiagnostics, mode (quote).
 
 Examples
-  salai fulfill "חלב, לחם, ביצים" --json
-  salai fulfill --file ./list.txt --scope all_active --max-stores 5 --json
-  salai fulfill "חלב" --brand-strict --no-alternatives --json
+  salai shopping-list "חלב, לחם, ביצים" --json
+  salai shopping-list --file ./list.txt --scope all_active --max-stores 5 --json
+  salai shopping-list "חלב" --brand-strict --no-alternatives --json
+  salai fulfill "חלב, לחם" --json
   salai call fulfill_shopping_list --args '{"items":[{"query":"חלב","quantity":2}],"scope":{"mode":"online_only","maxStores":3}}' --json
 `,
     );
