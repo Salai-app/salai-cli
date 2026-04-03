@@ -7,7 +7,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 export const DEFAULT_MCP_URL = 'https://mcp.salai.co.il/mcp';
-export const PACKAGE_VERSION = '0.1.6';
+export const PACKAGE_VERSION = '0.1.8';
 
 export interface McpClientOptions {
   apiKey: string | null;

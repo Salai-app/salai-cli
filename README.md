@@ -8,14 +8,14 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-## What's New in v0.1.7
+## What's New in v0.1.8
 
-- **Startup banner** (human output, TTY): Salai ASCII header with CLI version, **API KEY: (set)/(not set)**, and **Store/Retailer:** (`storeId / retailerId` from `get_my_store_context`). Omit with **`--no-banner`**, or use **`--compact-header`** for a single-line header.
-- **No API key**: fails fast with a short message (no MCP “Streamable HTTP” / JSON error spam). Banner still shows **`API KEY: (not set)`** and **`Store/Retailer: (unavailable)`** when the banner runs.
-- **`scripts/cli-banner-sketch.mjs`** — optional local prototype for banner layout (`node scripts/cli-banner-sketch.mjs`).
+- **`salai --version` / banner** now match the npm package version (`PACKAGE_VERSION` kept in sync with `package.json`).
+- **Bare `salai`** (no subcommand): no spurious `Error: (outputHelp)`; exits cleanly after showing usage (Commander `commander.help` handling).
 
 ## Earlier
 
+- **v0.1.7** — Startup banner, `--no-banner` / `--compact-header`, Store/Retailer IDs in banner, no-key fail-fast, sketch script.
 - **v0.1.5** — `salai shopping-list` alias for `salai fulfill`; README / agent docs alignment.
 
 ## Agent Integration
