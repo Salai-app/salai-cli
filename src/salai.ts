@@ -22,6 +22,7 @@ import { registerCartCommands } from './commands/cart.js';
 import { registerRecommendCommands } from './commands/recommend.js';
 import { registerCallCommands } from './commands/call.js';
 import { registerFulfillCommands } from './commands/fulfill.js';
+import { printStartupBanner } from './banner.js';
 
 const program = new Command()
   .name('salai')
@@ -30,6 +31,11 @@ const program = new Command()
   .option('-k, --api-key <key>', 'Salai API key (or SALAI_API_KEY env)')
   .option('--url <url>', 'MCP endpoint URL (or SALAI_MCP_URL env)')
   .option('--json', 'output raw JSON instead of formatted tables')
+  .option('--no-banner', 'hide the startup banner (human output only)')
+  .option(
+    '--compact-header',
+    'use a compact single-line header instead of the full banner',
+  )
   .configureOutput({
     writeErr: (str) => process.stderr.write(str),
   });
@@ -45,9 +51,8 @@ async function getClient(): Promise<Client> {
   });
 
   if (!config.apiKey) {
-    console.error(
-      'Warning: No API key. Set SALAI_API_KEY or use --api-key.\n' +
-        'Get your key: https://app.salai.co.il → Profile → API Key'
+    throw new Error(
+      'Missing API key. Set SALAI_API_KEY or use --api-key. Get your key: https://app.salai.co.il → Profile → API Key',
     );
   }
 
@@ -69,6 +74,17 @@ registerCartCommands(program, getClient, isJson);
 registerRecommendCommands(program, getClient, isJson);
 registerCallCommands(program, getClient, isJson);
 registerFulfillCommands(program, getClient, isJson);
+
+program.hook('preAction', async () => {
+  const o = program.opts();
+  await printStartupBanner(getClient, {
+    apiKey: o.apiKey,
+    url: o.url,
+    json: o.json,
+    noBanner: o.noBanner,
+    compactHeader: o.compactHeader,
+  });
+});
 
 program.addHelpText(
   'after',

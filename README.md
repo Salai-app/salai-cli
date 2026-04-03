@@ -8,10 +8,15 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-## What's New in v0.1.5
+## What's New in v0.1.6
 
-- `salai shopping-list` — alias for `salai fulfill`; same MCP tool `fulfill_shopping_list` (shopping list quote)
-- README aligned with the SalAi monorepo package; agent integration section cleanup
+- **Startup banner** (human output, TTY): Salai ASCII header with CLI version, **API KEY: (set)/(not set)**, and **Store/Retailer:** (`storeId / retailerId` from `get_my_store_context`). Omit with **`--no-banner`**, or use **`--compact-header`** for a single-line header.
+- **No API key**: fails fast with a short message (no MCP “Streamable HTTP” / JSON error spam). Banner still shows **`API KEY: (not set)`** and **`Store/Retailer: (unavailable)`** when the banner runs.
+- **`scripts/cli-banner-sketch.mjs`** — optional local prototype for banner layout (`node scripts/cli-banner-sketch.mjs`).
+
+## Earlier
+
+- **v0.1.5** — `salai shopping-list` alias for `salai fulfill`; README / agent docs alignment.
 
 ## Agent Integration
 
@@ -107,10 +112,14 @@ salai [options] <command>
 
   -k, --api-key <key>   Salai API key (or SALAI_API_KEY env var)
   --url <url>            MCP endpoint URL (default: https://mcp.salai.co.il/mcp)
-  --json                 Output raw JSON instead of formatted tables
+  --json                 Output raw JSON instead of formatted tables (also skips the banner)
+  --no-banner            Hide the startup banner (human output only)
+  --compact-header       One-line header instead of the full banner
   -v, --version          Print version
   -h, --help             Show help
 ```
+
+`MCP_API_KEY` is also read if `SALAI_API_KEY` is unset (same as the CLI resolver).
 
 ### Search
 
@@ -213,8 +222,10 @@ salai cart --json | jq '.items[].itemName'
 
 | Variable | Description |
 |---|---|
-| `SALAI_API_KEY` | Your Salai API key from Profile |
+| `SALAI_API_KEY` | Your Salai API key from Profile (primary) |
+| `MCP_API_KEY` | Alternative env name for the API key if `SALAI_API_KEY` is unset |
 | `SALAI_MCP_URL` | Override the MCP endpoint URL |
+| `NO_COLOR` | Set to disable ANSI in the banner (when stdout is a TTY) |
 
 ---
 
