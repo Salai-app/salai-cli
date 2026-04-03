@@ -101,13 +101,10 @@ async function main() {
   try {
     await program.parseAsync(process.argv);
   } catch (err: unknown) {
-    const isCommanderExit =
-      err && typeof err === 'object' && 'code' in err && (err as any).code === 'commander.helpDisplayed';
-    if (isCommanderExit) return;
+    const code = err && typeof err === 'object' && 'code' in err ? (err as any).code : null;
+    if (code === 'commander.helpDisplayed' || code === 'commander.help') return;
 
-    const versionExit =
-      err && typeof err === 'object' && 'code' in err && (err as any).code === 'commander.version';
-    if (versionExit) return;
+    if (code === 'commander.version') return;
 
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Error: ${msg}`);

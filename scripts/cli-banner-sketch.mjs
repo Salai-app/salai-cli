@@ -11,7 +11,7 @@ const L = [
   ' |___/\\__,_|_\\__,_|_|',
   '                     ',
 ];
-const R = [b('CLI'), 'v0.1.6', 'API KEY: (set)', 'Store/Retailer: 413 / 7290027600007', d('cwd: ' + process.cwd())];
+const R = [b('CLI'), 'v0.1.7', 'API KEY: (set)', 'Store/Retailer: 413 / 7290027600007', d('cwd: ' + process.cwd())];
 L.forEach((ln, i) => console.log(pad(ln, 24) + d('│ ') + R[i]));
 const w = [10, 28];
 const row = (a, c) => d('│') + ' ' + pad(a, w[0]) + ' ' + d('│') + ' ' + pad(c, w[1]) + ' ' + d('│');

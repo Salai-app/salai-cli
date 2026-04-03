@@ -8,7 +8,7 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
-## What's New in v0.1.6
+## What's New in v0.1.7
 
 - **Startup banner** (human output, TTY): Salai ASCII header with CLI version, **API KEY: (set)/(not set)**, and **Store/Retailer:** (`storeId / retailerId` from `get_my_store_context`). Omit with **`--no-banner`**, or use **`--compact-header`** for a single-line header.
 - **No API key**: fails fast with a short message (no MCP “Streamable HTTP” / JSON error spam). Banner still shows **`API KEY: (not set)`** and **`Store/Retailer: (unavailable)`** when the banner runs.
