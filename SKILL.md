@@ -6,19 +6,37 @@ homepage: https://app.salai.co.il
 
 # Salai CLI Skill (Shell / Terminal)
 
-Use the `salai` CLI to search Israeli grocery products, compare prices, manage carts, and (recommended) quote whole shopping lists in one call. All commands talk to `https://mcp.salai.co.il/mcp`.
+Use the `salai` CLI to search Israeli grocery products, compare prices, manage carts, and (recommended) quote whole shopping lists in one call. **Production Salai endpoints are the default** — no URL configuration for normal use.
 
 Longer agent guidance: `docs/agent-spec-short.md` in this repository; full `docs/agent-spec.md` may live in the [SalAi monorepo](https://github.com/IdoZiv/SalAi).
 
 ## Prerequisites
 
 - `salai` CLI installed: `npm i -g salai` or `npx salai <command>`
-- `SALAI_API_KEY` set (or pass `--api-key`)
+- **Auth** (see below): `SALAI_API_KEY` or `--api-key`, **`salai login`** (credentials file), or legacy `MCP_API_KEY` when `SALAI_API_KEY` is unset. If both env and file exist, **`SALAI_API_KEY` overrides the file** — unset it (e.g. `env -u SALAI_API_KEY`) to use logged-in credentials.
 - **Selected store** is required for `search`, `autocomplete`, `cart`, and for `compare` / `prices` scope — **not** for `shopping-list` / `fulfill` (quote mode is request-scoped; no `SELECTED_STORE_REQUIRED`)
 
 ## CRITICAL: Always use `--json`
 
-When calling `salai` as an agent, **always append `--json`** to every command. Parse structured JSON from the output.
+When calling `salai` as an agent, **always append `--json`** to every command (including **`salai whoami`** when you need machine-readable output). Parse structured JSON from the output.
+
+## Auth (device login)
+
+| Command | What it does |
+|---------|----------------|
+| **`salai login`** | Device sign-in in the browser; on success writes `~/.config/salai/credentials.json`. |
+| **`salai logout`** | Removes the credential file; **`--revoke`** also deactivates that API key on the server. |
+| **`salai whoami`** | Prints account/key metadata (never the secret); use **`--json`** for scripts. |
+
+```bash
+salai login [--no-browser] [--name <label>]
+salai logout [--revoke]
+salai whoami [--json]
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `SALAI_LOGIN_NO_BROWSER` | Set to `1` to skip opening the browser during `salai login` (same idea as `--no-browser`) |
 
 ## Commands Reference
 
@@ -143,6 +161,7 @@ salai call <toolName> --args '{"key":"value"}' --json # Call any tool by name
 | Commands | Behavior |
 |---|---|
 | `shopping-list` / `fulfill` | No selected store; scope from flags / tool args (`online_only`, `all_active`, or explicit via `salai call`) |
+| `login`, `logout`, `whoami` | No selected store; credentials / API only |
 | `store`, `stores`, `retailers` | Work without a selected store |
 | `search`, `autocomplete`, `cart *` | Require a selected store |
 | `compare`, `prices` | Cross-store comparison (needs selected store for scope) |
@@ -152,10 +171,10 @@ If no store is set, store-scoped commands return `status: "blocked"`, `errorCode
 
 ## Error handling
 
-- **No output / connection error** — check `SALAI_API_KEY` and network
+- **No output / connection error** — check auth (`SALAI_API_KEY`, **`salai login`**, or credential file) and network
 - **`SELECTED_STORE_REQUIRED`** — `salai store set <retailerId> <storeId>` (not applicable to `shopping-list` / `fulfill`)
 - **`TOKEN_LIMIT_REACHED`** / **`RATE_LIMIT_EXCEEDED`** — especially on shopping list quotes; back off, reduce frequency, or upgrade plan; read response `retryAfterMs` if present
-- **`AUTH_REQUIRED`** — missing or invalid API key
+- **`AUTH_REQUIRED`** — missing or invalid key; run **`salai login`** or set `SALAI_API_KEY` / `--api-key`
 - **`INVALID_INPUT`** — empty list, bad scope, etc.
 - **Empty search results** — try `salai ac "<query>" --method semantic --json`
 - **Never log or expose the API key**

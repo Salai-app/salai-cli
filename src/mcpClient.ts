@@ -6,8 +6,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+import { readStoredCredentials } from './credentials.js';
+
 export const DEFAULT_MCP_URL = 'https://mcp.salai.co.il/mcp';
-export const PACKAGE_VERSION = '0.1.8';
+export const DEFAULT_API_URL = 'https://api.salai.co.il';
+export const PACKAGE_VERSION = '0.1.9';
 
 export interface McpClientOptions {
   apiKey: string | null;
@@ -15,18 +18,43 @@ export interface McpClientOptions {
   clientName?: string;
 }
 
+export interface ResolvedMcpConfig {
+  apiKey: string | null;
+  url: string;
+  /** Backend REST origin (no /api), for login / whoami / revoke */
+  apiBaseUrl: string;
+}
+
+/**
+ * Precedence: explicit apiKey override → env → ~/.config/salai/credentials.json
+ */
 export function resolveConfig(overrides?: {
   apiKey?: string;
   url?: string;
-}): { apiKey: string | null; url: string } {
-  return {
-    apiKey:
-      overrides?.apiKey ||
-      process.env.SALAI_API_KEY ||
-      process.env.MCP_API_KEY ||
-      null,
-    url: overrides?.url || process.env.SALAI_MCP_URL || DEFAULT_MCP_URL,
-  };
+}): ResolvedMcpConfig {
+  const fromEnv =
+    overrides?.apiKey ||
+    process.env.SALAI_API_KEY ||
+    process.env.MCP_API_KEY ||
+    null;
+
+  const file = !fromEnv ? readStoredCredentials() : null;
+
+  const apiKey = fromEnv || file?.apiKey || null;
+
+  const url =
+    overrides?.url ||
+    process.env.SALAI_MCP_URL ||
+    file?.mcpUrl ||
+    DEFAULT_MCP_URL;
+
+  const apiBaseUrl = (
+    process.env.SALAI_API_URL ||
+    file?.apiBaseUrl ||
+    DEFAULT_API_URL
+  ).replace(/\/$/, '');
+
+  return { apiKey, url, apiBaseUrl };
 }
 
 export function buildHeaders(apiKey: string | null): Record<string, string> {
