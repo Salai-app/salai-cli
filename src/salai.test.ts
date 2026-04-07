@@ -3,6 +3,8 @@ import { describe, it, before } from 'node:test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const execFileP = promisify(execFile);
@@ -50,17 +52,23 @@ function parseJson(stdout: string): any {
 // ---------------------------------------------------------------------------
 
 describe('negative: no API key', () => {
-  it('should error when SALAI_API_KEY is not set', async () => {
-    const r = await run(['retailers', '--json'], {
-      SALAI_API_KEY: undefined,
-      MCP_API_KEY: undefined,
-    });
-    assert.notEqual(r.exitCode, 0, 'should exit non-zero');
-    const combined = r.stderr + r.stdout;
-    assert.ok(
-      /api.key|SALAI_API_KEY|unauthorized|error/i.test(combined),
-      `expected API key error, got: ${combined.slice(0, 300)}`,
-    );
+  it('should error when no API key from env or credential file', async () => {
+    const emptyConfig = mkdtempSync(join(tmpdir(), 'salai-cli-no-key-'));
+    try {
+      const r = await run(['retailers', '--json'], {
+        XDG_CONFIG_HOME: emptyConfig,
+        SALAI_API_KEY: '',
+        MCP_API_KEY: '',
+      });
+      assert.notEqual(r.exitCode, 0, 'should exit non-zero');
+      const combined = r.stderr + r.stdout;
+      assert.ok(
+        /api.key|SALAI_API_KEY|login|unauthorized|error/i.test(combined),
+        `expected API key error, got: ${combined.slice(0, 300)}`,
+      );
+    } finally {
+      rmSync(emptyConfig, { recursive: true, force: true });
+    }
   });
 
   it('should error with an invalid API key', async () => {
