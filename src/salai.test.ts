@@ -116,6 +116,7 @@ describe('meta', () => {
     assert.equal(r.exitCode, 0);
     assert.ok(r.stdout.includes('salai'), 'help should mention salai');
     assert.ok(r.stdout.includes('search'), 'help should list search command');
+    assert.ok(r.stdout.includes('history'), 'help should list history command');
   });
 
   it('--version should print version', async () => {
@@ -252,6 +253,20 @@ describe('prices', () => {
     if (Array.isArray(retailers)) {
       assert.ok(retailers.length > 0, 'should compare across at least one retailer');
     }
+  });
+
+  it('history --json should return price history or structured error', async () => {
+    const r = await run(['history', KNOWN_ITEM_CODE, '--json']);
+    assert.equal(r.exitCode, 0, `stderr: ${r.stderr}`);
+    const data = parseJson(r.stdout);
+    assert.ok(data != null, 'should return JSON');
+    const raw = data?.raw ?? data;
+    const ok =
+      data?.viewType === 'price_history_chart' ||
+      raw?.status === 'OK' ||
+      data?.status === 'NOT_FOUND' ||
+      data?.status === 'DISAMBIGUATION_REQUIRED';
+    assert.ok(ok, 'expected chart payload or known history status');
   });
 
 });

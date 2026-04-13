@@ -141,6 +141,9 @@ export function outputResult(result: ToolResult, toolName: string): void {
     case 'fulfill_shopping_list':
       formatFulfillShoppingList(data);
       break;
+    case 'get_price_history':
+      formatPriceHistory(data);
+      break;
     default:
       console.log(JSON.stringify(data, null, 2));
   }
@@ -519,4 +522,121 @@ function formatFulfillShoppingList(data: any): void {
   if (timing) {
     console.log(c(DIM, `\nTiming: resolve ${timing.resolveMs}ms, prices ${timing.priceMs}ms, total ${timing.totalMs}ms`));
   }
+}
+
+const HISTORY_TABLE_MAX = 30;
+
+function formatPriceHistory(data: any): void {
+  if (data.viewType === 'price_history_chart' && data.raw && typeof data.raw === 'object') {
+    const raw = data.raw as Record<string, unknown>;
+    if (raw.status === 'OK') {
+      const rp = (raw.resolvedProduct ?? {}) as Record<string, unknown>;
+      const name = String(rp.itemName ?? rp.itemCode ?? '—');
+      console.log(c(BOLD, `\n📈 Price history`));
+      console.log(`${rtl(name)}  ${c(DIM, String(rp.itemCode ?? ''))}`);
+
+      const scope = (raw.scope ?? data.scope ?? {}) as Record<string, unknown>;
+      const scopeBits: string[] = [];
+      if (scope.days != null) scopeBits.push(`${scope.days}d lookback (processed_at)`);
+      if (scope.onlineOnly === true) scopeBits.push('online only');
+      if (scope.retailerId && scope.storeId) {
+        scopeBits.push(`store ${scope.retailerId}:${scope.storeId}`);
+      }
+      if (scopeBits.length) console.log(c(DIM, scopeBits.join(' · ')));
+
+      const sum = (raw.summary ?? data.statsSummary ?? {}) as Record<string, unknown>;
+      const pct = (sum.percentChanges ?? {}) as Record<string, unknown>;
+      console.log(
+        table(
+          ['Avg', 'Median', 'Min', 'Max'],
+          [
+            [
+              shekel(sum.avgPrice as number),
+              shekel(sum.medianPrice as number),
+              shekel(sum.minPrice as number),
+              shekel(sum.maxPrice as number),
+            ],
+          ],
+          ['r', 'r', 'r', 'r'],
+        ),
+      );
+      if (pct.firstToLastInWindowPct != null || pct.latestVsPreviousPct != null) {
+        console.log(
+          c(
+            DIM,
+            `Δ window: ${fmtPct(pct.firstToLastInWindowPct)} · latest vs prev: ${fmtPct(pct.latestVsPreviousPct)}`,
+          ),
+        );
+      }
+
+      const points = Array.isArray(raw.dataPoints) ? raw.dataPoints : [];
+      const cov = (raw.coverage ?? {}) as Record<string, unknown>;
+      if (typeof cov.rowsReturned === 'number' && typeof cov.totalRowsForItemCodeAllStores === 'number') {
+        if (cov.totalRowsForItemCodeAllStores > cov.rowsReturned) {
+          console.log(
+            c(
+              DIM,
+              `\nShowing ${cov.rowsReturned} of ${cov.totalRowsForItemCodeAllStores} DB rows for this item (increase --days if needed).`,
+            ),
+          );
+        }
+      }
+
+      if (points.length === 0) {
+        console.log(c(DIM, '\nNo observations in this window.'));
+        return;
+      }
+
+      const shown = points.slice(0, HISTORY_TABLE_MAX);
+      const rows = shown.map((p: any) => {
+        const store = `${p.retailerId ?? ''}:${p.storeId ?? ''}`;
+        const t = String(p.priceUpdateTime ?? p.processedAt ?? '').slice(0, 19);
+        return [store, t, shekel(p.itemPrice), String(p.changeType ?? '')];
+      });
+      console.log(c(DIM, `\nObservations (newest first, up to ${HISTORY_TABLE_MAX}):`));
+      console.log(table(['Store', 'Time (UTC)', 'Price', 'Type'], rows, ['l', 'l', 'r', 'l']));
+      if (points.length > HISTORY_TABLE_MAX) {
+        console.log(c(DIM, `… and ${points.length - HISTORY_TABLE_MAX} more (use --json for full payload).`));
+      }
+      return;
+    }
+  }
+
+  const st = data.status as string | undefined;
+  if (st === 'DISAMBIGUATION_REQUIRED' && Array.isArray(data.candidates)) {
+    console.log(c(YELLOW, 'Choose a product:'));
+    const rows = data.candidates.map((cand: any) => [
+      String(cand.option ?? ''),
+      cand.itemCode ?? '',
+      rtl(String(cand.itemName ?? '')),
+    ]);
+    console.log(table(['#', 'Code', 'Name'], rows, ['r', 'l', 'l']));
+    if (data.instruction) console.log(c(DIM, `\n${data.instruction}`));
+    return;
+  }
+
+  if (st === 'blocked' || data.errorCode === 'SELECTED_STORE_REQUIRED') {
+    console.log(c(RED, `${data.errorCode ?? 'blocked'}: ${data.message ?? 'Selected store required'}`));
+    return;
+  }
+
+  if (st === 'NOT_FOUND' || st === 'INVALID_SELECTION') {
+    console.log(c(YELLOW, `${st}: ${data.message ?? ''}`));
+    if (Array.isArray(data.candidates) && data.candidates.length > 0) {
+      const rows = data.candidates.map((cand: any) => [
+        String(cand.option ?? ''),
+        cand.itemCode ?? '',
+        rtl(String(cand.itemName ?? '')),
+      ]);
+      console.log(table(['#', 'Code', 'Name'], rows, ['r', 'l', 'l']));
+    }
+    return;
+  }
+
+  console.log(JSON.stringify(data, null, 2));
+}
+
+function fmtPct(v: unknown): string {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '—';
+  return `${v.toFixed(1)}%`;
 }

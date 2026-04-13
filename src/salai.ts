@@ -8,6 +8,7 @@
  *   salai search "חלב"
  *   salai cart add 7290019489443 --qty 2
  *   salai compare 7290019489443:1 7290000123456:3
+ *   salai history 7290000042015
  *   salai tools
  */
 
@@ -17,6 +18,7 @@ import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
 import { registerSearchCommands } from './commands/search.js';
 import { registerPriceCommands } from './commands/prices.js';
+import { registerHistoryCommands } from './commands/history.js';
 import { registerStoreCommands } from './commands/stores.js';
 import { registerCartCommands } from './commands/cart.js';
 import { registerRecommendCommands } from './commands/recommend.js';
@@ -74,6 +76,7 @@ function isJson(): boolean {
 
 registerSearchCommands(program, getClient, isJson);
 registerPriceCommands(program, getClient, isJson);
+registerHistoryCommands(program, getClient, isJson);
 registerStoreCommands(program, getClient, isJson);
 registerCartCommands(program, getClient, isJson);
 registerRecommendCommands(program, getClient, isJson);

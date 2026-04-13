@@ -10,7 +10,7 @@ import { readStoredCredentials } from './credentials.js';
 
 export const DEFAULT_MCP_URL = 'https://mcp.salai.co.il/mcp';
 export const DEFAULT_API_URL = 'https://api.salai.co.il';
-export const PACKAGE_VERSION = '0.1.9';
+export const PACKAGE_VERSION = '0.1.10';
 
 export interface McpClientOptions {
   apiKey: string | null;

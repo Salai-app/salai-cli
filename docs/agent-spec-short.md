@@ -26,6 +26,8 @@
 - `salai search "<query>" --json`
 - `salai ac "<query>" --json`
 - `salai compare <itemCode:qty>... --json`
+- `salai history <itemCode> --json` (or `--barcode` / `--query`; see `docs/product-price-history.md`)
+- **History by name:** use `--query '…'`, not a bare positional (positional is **itemCode** only). On **`DISAMBIGUATION_REQUIRED`**, rerun with the same `--query` and **`--select N`** (or `--select-code` / `--select-name`). Prefer `salai --json history …` or `node dist/salai.js --json history …` when developing (see doc for `tsx`/`--json` quirks).
 - `salai cart add <itemCode> --json`
 - `salai cart compare --json`
 

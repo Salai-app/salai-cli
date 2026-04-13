@@ -8,6 +8,10 @@ npx salai retailers
 npx salai cart add 7290019489443
 ```
 
+## What's New in v0.1.10
+
+- **`salai history`** — price history from `price_history` (MCP `get_price_history`): item code, `--barcode`, or `--query` with disambiguation (`--select`, `--select-code`, `--select-name`), plus `--days`, `--limit`, `--online-only`, and optional `--retailer` + `--store`. Use **`--json`** for agents. See **`docs/product-price-history.md`**.
+
 ## What's New in v0.1.9
 
 - **`salai login` / `logout` / `whoami`** — browser sign-in with a short user code; credentials saved under `~/.config/salai/credentials.json` (mode `0600`). Resolution order: `--api-key` → `SALAI_API_KEY` / `MCP_API_KEY` → credential file.
@@ -96,6 +100,7 @@ See:
 
 - `AGENTS.md`
 - `docs/agent-spec-short.md`
+- `docs/product-price-history.md` — `salai history` / `get_price_history`
 - `docs/agents/`
 
 ## Using with AI agents
@@ -205,7 +210,18 @@ salai prices <itemCode...>        # Get prices for item codes
 salai compare <code:qty...>       # Compare across retailers
   --stores <rid:sid,...>           # Limit to specific stores
 
+salai history [itemCode]          # Price history (processed_at window; see docs)
+  -b, --barcode <code>            # Barcode / code → catalog item_code
+  -q, --query <text>              # Name search (may require --select)
+  --retailer <id> --store <id>    # One store (both required)
+  --online-only                   # Active online stores only
+  --days <n>                      # Lookback days (default 365 on server)
+  --limit <n>                     # Max rows
+  --select <n>                    # After disambiguation: option 1–10
+
 ```
+
+Full reference: **`docs/product-price-history.md`** (how to run with `--json`, **`--query`** vs positional code, **`DISAMBIGUATION_REQUIRED`** + **`--select`**, local `SALAI_MCP_URL`).
 
 ### Stores
 
@@ -252,12 +268,14 @@ salai call <toolName>             # Call any tool by name
 
 ## Pipe-Friendly
 
-Every command supports `--json` for composable pipelines:
+Most commands support **`--json`** on the **same line as `salai`**, before the subcommand (works with `npx salai` / `node dist/salai.js`). Example:
 
 ```bash
-salai search "חלב" --json | jq '.products[0].itemCode'
-salai cart --json | jq '.items[].itemName'
+salai --json search "חלב" | jq '.numberedProducts[0].itemCode'
+salai --json cart | jq '.items[].itemName'
 ```
+
+From source, prefer **`pnpm run build && node dist/salai.js --json …`** so `--json` is not confused with `tsx`/`pnpm` argument forwarding (see **`docs/product-price-history.md`**).
 
 ---
 
@@ -291,4 +309,4 @@ Terminal / Script
   https://mcp.salai.co.il/mcp
 ```
 
-The CLI connects to the same Salai MCP HTTP endpoint used by the MCP bridge, using the same API key and accessing the same 18+ tools.
+The CLI connects to the same Salai MCP HTTP endpoint used by the MCP bridge, using the same API key and accessing the same tools (including **`get_price_history`** via **`salai history`**).

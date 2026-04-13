@@ -1,6 +1,6 @@
 ---
 name: salai-cli
-description: Israeli grocery shopping via the Salai CLI. Use when the user asks for the salai CLI, salai command line, or shell-based search, price comparison, cart management, store discovery, or one-shot shopping-list quotes (`salai shopping-list`, alias `salai fulfill`). Prefer the salai-mcp skill when MCP tools are available; use this skill when only shell access is available.
+description: Israeli grocery shopping via the Salai CLI. Use when the user asks for the salai CLI, salai command line, or shell-based search, price comparison, price history (`salai history`), cart management, store discovery, or one-shot shopping-list quotes (`salai shopping-list`, alias `salai fulfill`). Prefer the salai-mcp skill when MCP tools are available; use this skill when only shell access is available.
 homepage: https://app.salai.co.il
 ---
 
@@ -90,6 +90,24 @@ salai compare <itemCode:qty> [<itemCode:qty>...] --json  # Compare across retail
 
 **Compare format**: `salai compare 7290000042015:2 7290019489443:1 --json`
 
+### Price history (usually no selected store for `itemCode` / `--barcode`)
+
+Time series from `price_history` (MCP `get_price_history`). **`--query`** may require a selected store when the server uses store-first mode.
+
+- **Names / Hebrew:** use **`--query '…'`** — a bare positional is always **`itemCode`**, not a search string.
+- **`DISAMBIGUATION_REQUIRED`:** repeat the **same** `--query` and scope and add **`--select N`**, **`--select-code`**, or **`--select-name`**.
+- **`--json`:** use `salai --json history …` or `node dist/salai.js --json history …` when developing; see `docs/product-price-history.md` for `tsx` quirks.
+
+```bash
+salai history <itemCode> --json
+salai --json history --barcode <code> --days 90 --online-only
+salai --json history --query "חלב"
+salai --json history --query "חלב" --select 2
+salai history <itemCode> --retailer <rid> --store <sid> --json
+```
+
+Longer reference: `docs/product-price-history.md` in the salai-cli repository.
+
 ### Cart (requires selected store)
 
 ```bash
@@ -146,6 +164,7 @@ salai call <toolName> --args '{"key":"value"}' --json # Call any tool by name
 | `store`, `stores`, `retailers` | Work without a selected store |
 | `search`, `autocomplete`, `cart *` | Require a selected store |
 | `compare`, `prices` | Cross-store comparison (needs selected store for scope) |
+| `history` | `itemCode` / `--barcode` usually need no store; `--query` may require selected store (store-first) |
 | `recommend`, `tools` | Work without a selected store |
 
 If no store is set, store-scoped commands return `status: "blocked"`, `errorCode: "SELECTED_STORE_REQUIRED"`. Use `salai store set` first — **unless** you are using `shopping-list` / `fulfill`, which does not use the selected-store context for quote mode.
@@ -158,4 +177,5 @@ If no store is set, store-scoped commands return `status: "blocked"`, `errorCode
 - **`AUTH_REQUIRED`** — missing or invalid API key
 - **`INVALID_INPUT`** — empty list, bad scope, etc.
 - **Empty search results** — try `salai ac "<query>" --method semantic --json`
+- **`DISAMBIGUATION_REQUIRED` on `history`** — same `--query` + scope + `--select` / `--select-code` / `--select-name` (`docs/product-price-history.md`)
 - **Never log or expose the API key**
