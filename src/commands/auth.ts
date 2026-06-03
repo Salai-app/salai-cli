@@ -13,26 +13,52 @@ import {
 
 const DEVICE_GRANT = 'urn:ietf:params:oauth:grant-type:device_code';
 
+/** Only http(s) URLs from the device flow may be passed to the OS opener. */
+function assertSafeHttpUrl(raw: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error('login: invalid verification URL from server');
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error('login: unsupported verification URL protocol');
+  }
+  return parsed.href;
+}
+
 /**
  * Open URL in the system default browser without waiting for the browser process.
  * Returns false if spawning failed (e.g. xdg-open missing).
  */
 function openUrlInBrowser(url: string): Promise<boolean> {
+  let safeUrl: string;
+  try {
+    safeUrl = assertSafeHttpUrl(url);
+  } catch {
+    return Promise.resolve(false);
+  }
   return new Promise((resolve) => {
     const platform = process.platform;
+    let executable: string;
+    let args: string[];
+    if (platform === 'darwin') {
+      executable = 'open';
+      args = [safeUrl];
+    } else if (platform === 'win32') {
+      executable = 'rundll32';
+      args = ['url.dll,FileProtocolHandler', safeUrl];
+    } else {
+      executable = 'xdg-open';
+      args = [safeUrl];
+    }
     try {
-      let child;
-      if (platform === 'darwin') {
-        child = spawn('open', [url], { detached: true, stdio: 'ignore' });
-      } else if (platform === 'win32') {
-        child = spawn('cmd', ['/c', 'start', '', url], {
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: true,
-        });
-      } else {
-        child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' });
-      }
+      const child = spawn(executable, args, {
+        detached: true,
+        stdio: 'ignore',
+        shell: false,
+        windowsHide: true,
+      });
       child.on('error', () => resolve(false));
       child.unref();
       resolve(true);

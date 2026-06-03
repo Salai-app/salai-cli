@@ -30,11 +30,15 @@ npx salai cart add 7290019489443
 ## Install
 
 ```bash
-# Run without installing
+# Run without installing (latest stable)
 npx salai <command>
 
+# Bleeding edge from main (auto-published on merge)
+npx salai@next <command>
+
 # Or install globally
-npm i -g salai
+npm i -g salai          # stable (latest tag)
+npm i -g salai@next     # prerelease from main
 salai <command>
 ```
 

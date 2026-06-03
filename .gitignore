@@ -12,3 +12,4 @@ coverage/
 # npm pack (salai-<version>.tgz)
 salai-*.tgz
 .npmrc
+.praxis/guard/audit.jsonl

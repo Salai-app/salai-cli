@@ -1,0 +1,57 @@
+# On every push to main: auto-bump patch, publish salai@next, commit version back.
+# Auth: npm Trusted Publisher (OIDC) — no NPM_TOKEN secret.
+# Install: npm i -g salai@next
+
+name: Publish to npm (@next)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-npm-next
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump version (patch from max of package.json and npm @next)
+        run: node scripts/release-bump.mjs
+
+      - name: Build and test
+        run: pnpm run test
+
+      - name: Publish to npm (@next)
+        run: npm publish --provenance --access public --tag next
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json src/mcpClient.ts
+          git diff --staged --quiet && echo "No version files to commit" && exit 0
+          VERSION=$(node -p "require('./package.json').version")
+          git commit -m "chore(release): salai@${VERSION} [skip ci]"
+          git push
