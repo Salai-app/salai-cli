@@ -6,8 +6,23 @@ import { fileURLToPath } from 'node:url';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { readStoredCredentials } from './credentials.js';
 
 const execFileP = promisify(execFile);
+
+function hasIntegrationApiKey(): boolean {
+  return !!(
+    process.env.SALAI_API_KEY?.trim() ||
+    process.env.MCP_API_KEY?.trim() ||
+    readStoredCredentials()?.apiKey
+  );
+}
+
+if (process.env.CI === 'true' && !hasIntegrationApiKey()) {
+  throw new Error(
+    'CI integration tests require the SALAI_API_KEY repository secret.',
+  );
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, 'salai.js');
@@ -96,7 +111,7 @@ describe('negative: bad arguments', () => {
   });
 
   it('should error when call --args is not valid JSON', async () => {
-    const r = await run(['call', 'get_retailers', '--args', 'not-json!!!']);
+    const r = await run(['call', 'get_retailers', '--args', 'not-json!!!', '--json']);
     assert.notEqual(r.exitCode, 0);
     const combined = r.stderr + r.stdout;
     assert.ok(

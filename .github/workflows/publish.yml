@@ -41,7 +41,14 @@ jobs:
         run: node scripts/release-bump.mjs
 
       - name: Build and test
-        run: pnpm run test
+        env:
+          SALAI_API_KEY: ${{ secrets.SALAI_API_KEY }}
+        run: |
+          if [ -z "${SALAI_API_KEY}" ]; then
+            echo "::error::Repository secret SALAI_API_KEY is required for integration tests"
+            exit 1
+          fi
+          pnpm run test
 
       - name: Publish to npm (@next)
         run: npm publish --provenance --access public --tag next

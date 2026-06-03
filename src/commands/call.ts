@@ -13,7 +13,6 @@ export function registerCallCommands(
     .description('Call any MCP tool by name (escape hatch)')
     .option('--args <json>', 'JSON arguments', '{}')
     .action(async (toolName: string, opts) => {
-      const client = await getClient();
       let args: Record<string, unknown>;
       try {
         args = JSON.parse(opts.args);
@@ -23,6 +22,7 @@ export function registerCallCommands(
         return;
       }
 
+      const client = await getClient();
       const result = await callTool(client, toolName, args);
       isJson() ? outputRaw(result) : outputResult(result, toolName);
       await client.close();

@@ -13,3 +13,5 @@ coverage/
 salai-*.tgz
 .npmrc
 .praxis/guard/audit.jsonl
+.praxis/guard/tickets/a596467feb99746a44f7a275820ed673c49fc2ac99580b7e81be4a45aa3c1554_2e55dd75-be39-4621-83b0-794dd51c5622.json
+.praxis/guard/tickets/a596467feb99746a44f7a275820ed673c49fc2ac99580b7e81be4a45aa3c1554_bf1aa19f-45c1-404e-8cf4-1eb691d046ec.json
