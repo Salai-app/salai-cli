@@ -1,6 +1,6 @@
 {
   "name": "salai",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Salai grocery CLI for Israeli product search, price comparison, and cart workflows",
   "keywords": [
     "salai",
